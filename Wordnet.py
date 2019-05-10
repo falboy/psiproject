@@ -1,5 +1,6 @@
 import sqlite3
 import pprint
+import argparse
 
 # 類似単語を検索する関数(未完成)
 def search_similar_words(conn, query):
@@ -47,8 +48,14 @@ def main():
     filepath = 'data/wnjpn.db'
     # データベースにコネクト
     conn = sqlite3.connect(filepath)
+    # argparseのオブジェクトを作成
+    parser = argparse.ArgumentParser()
+    # パラメータを追加
+    parser.add_argument("query")
+    # 引数を取得
+    args = parser.parse_args()
     # カーソルを取得
-    search_word_info(conn, '元気')
+    search_word_info(conn, args.query)
 
 if __name__ == '__main__':
     main()
