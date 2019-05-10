@@ -30,10 +30,14 @@ def search_word_info(conn, query):
         print("%s hit" % len(sense_result))
         for synset in sense_result:
             print("synset:%s" % synset)
-            # 概念の意味を表示
+            # 概念を表示
             cur = conn.execute("select pos, name from synset where synset='%s'" % synset)
             synset_result = cur.fetchall()
             print('pos="%s", name="%s"' % (synset_result[0][0], synset_result[0][1]))
+            # 概念の定義を表示
+            cur = conn.execute("select def from synset_def where synset='%s'" % synset)
+            synset_def_result = cur.fetchall()
+            print('def:%s\n' % synset_def_result[0][0])
         print("\n")
 
         
