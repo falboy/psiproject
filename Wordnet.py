@@ -125,7 +125,7 @@ def get_word_id(conn, query):
 def get_word(conn, word_id):
     cur = conn.execute("select lemma, pos from word where lemma='%s'" % word_id)
     word_result = cur.fetchall()
-    return word_id
+    return word_result
 
 def main():
     # ファイルパス
