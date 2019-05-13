@@ -40,37 +40,6 @@ def get_hypernym(conn, query):
             
         print("\n")
 
-
-# 単語の情報を検索する関数
-def search_word_info(conn, query):
-    # lemmaがqueryと一致した行のidのカーソルオブジェを取得
-    cur = conn.execute("select wordid, pos from word where lemma='%s'" % query)
-    # 一致結果の行を取得 (複数ヒットする可能性がある)
-    result = cur.fetchall()
-    # ヒット件数を表示
-    print(str(len(result)) + 'hit')
-    for t in result:
-        # 検索結果（品詞と検索ワード）を表示
-        print('%s:%s" of "%s"' % (t[0], t[1], query))
-        # 単語IDを取得
-        word_id = t[0]
-        # 概念IDを取得 (複数ヒットする可能性がある)
-        cur = conn.execute("select synset from sense where wordid='%s'" % word_id)
-        sense_result = cur.fetchall()
-        # ヒット件数を表示
-        print("%s hit" % len(sense_result))
-        for synset in sense_result:
-            print("synset:%s" % synset)
-            # 概念を表示
-            cur = conn.execute("select pos, name from synset where synset='%s'" % synset)
-            synset_result = cur.fetchall()
-            print('pos="%s", name="%s"' % (synset_result[0][0], synset_result[0][1]))
-            # 概念定義を取得
-            cur = conn.execute("select def from synset_def where synset='%s'" % synset)
-            synset_def_result = cur.fetchall()
-            print('def:%s\n' % synset_def_result[0][0])
-        print('\n')
-
 # 概念IDから上位概念IDリストを返す関数 # return:link
 def get_hypernym_list(conn, synset_id):
     # 概念リンクを取得 (arg_ex:synset_id = 10023039-n)
@@ -118,8 +87,20 @@ def get_synset(conn, synsetid):
     # 値を返却
     return result
 
+# 概念IDから概念定義[{'lang'=xxx, 'define'=xxx}]を返す関数
+def get_synset_def(conn, synsetid):
+    cur = conn.execute("select lang, def from synset_def where synset='%s'" % synsetid)
+    synset_def_result = cur.fetchall()
+    # 返却用の空リストを作成
+    result = []
+    for synset_def in synset_def_result:
+        if synset_def[0] != 'img':
+            dic = dict (lang=synset_def[0], define=synset_def[1])
+            result.append(dic)
+    # 値を返却
+    return result
 # queryから単語情報[(wordid,pos)]を返す関数
-def get_wordid(conn, query):
+def get_wordid_list(conn, query):
     cur = conn.execute("select wordid, pos from word where lemma='%s'" % query)
     word_result = cur.fetchall()
     # 返却用の空リストを作成
@@ -131,7 +112,7 @@ def get_wordid(conn, query):
     if len(result) == 0:
         return False
     else:
-        return word_result
+        return result
 
 # word_idから単語[(lemma, pos)]を返す関数
 def get_word(conn, wordid):
@@ -143,8 +124,46 @@ def get_word(conn, wordid):
 def get_synsetid_list(conn, wordid):
     cur = conn.execute("select synset from sense where wordid='%s'" % wordid)
     sense_result = cur.fetchall()
-    return sense_result
+    # 空リスト作成
+    result = []
+    for sense in sense_result:
+        result.append(sense[0])
+    return result
 
+# 単語の情報を検索する関数
+def search_word_info(conn, query):
+    # 単語IDのリストを取得 (複数一致の可能性あり)
+    wordid_list = get_wordid_list(conn, query)
+    # 一致情報がなかった場合は関数を抜ける
+    if wordid_list is False:
+        print("No hit")
+        return
+    # ヒット件数を表示
+    print("%s hit" % str(len(wordid_list)))
+
+    for d in wordid_list:
+        # 検索結果（品詞と検索ワード）を表示
+        print('%s:%s" of "%s"' % (d['wordid'], d['pos'], query))
+        # 単語IDを取得
+        word_id = d['wordid']
+        # 単語の属する概念ID一覧を取得 (複数ヒットする可能性がある)
+        synsetid_list = get_synsetid_list(conn, word_id)
+        # ヒット件数を表示
+        print("%s hit" % len(synsetid_list))
+        for synsetid in synsetid_list:
+            print("synsetid:%s" % synsetid)
+            # 概念を取得
+            synset = get_synset(conn, synsetid)
+            # 取得した概念を表示
+            for s in synset:
+                print("pos:%s, name:%s" % (s['pos'], s['name']))
+            print("\n")
+            # 概念定義を取得
+            define = get_synset_def(conn, synsetid)
+            # 取得した概念定義を表示
+            for d in define:
+                print("lang:%s, def:%s" % (d['lang'], d['define'][:25])) # 長い時があるから25文字でスライス
+        print('\n')
 
 def main():
     # ファイルパス
