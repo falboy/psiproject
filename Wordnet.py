@@ -41,7 +41,6 @@ def get_hypernym(conn, query):
         print("\n")
 
 
-
 # 単語の情報を検索する関数
 def search_word_info(conn, query):
     # lemmaがqueryと一致した行のidのカーソルオブジェを取得
@@ -72,7 +71,6 @@ def search_word_info(conn, query):
             print('def:%s\n' % synset_def_result[0][0])
         print('\n')
 
-
 # 概念IDから上位概念IDリストを返す関数 # return:link
 def get_hypernym_list(conn, synset_id):
     # 概念リンクを取得 (arg_ex:synset_id = 10023039-n)
@@ -85,7 +83,10 @@ def get_hypernym_list(conn, synset_id):
         if synlink[1] == 'hype':
             result.append(synlink[0])
     # リストを返却
-    return result
+    if len(result) == 0:
+        return False
+    else:
+        return result
 
 # 概念IDから下位概念IDリストを返す関数 # return:link
 def get_hyponym_list(conn, synset_id):
@@ -99,7 +100,32 @@ def get_hyponym_list(conn, synset_id):
         if synlink[1] == 'hypo':
             result.append(synlink[0])
     # リストを返却
-    return result   
+    if len(result) == 0:
+        return False
+    else:
+        return result   
+
+# 概念IDから概念情報[(pos, name)]を返す関数
+def get_synset(conn, synset_id):
+    # 概念情報を取得
+    cur = conn.execute("select pos, name from synset where synset='%s'" % synset_id)
+    synset_result = cur.fetchall()
+    return synset_result
+
+# queryから単語情報[(word_id,pos)]を取得する関数
+def get_word_id(conn, query):
+    cur = conn.execute("select wordid, pos from word where lemma='%s'" % query)
+    word_result = cur.fetchall()
+    if len(word_result) == 0:
+        return False
+    else:
+        return word_result
+
+# word_idから単語を取得する関数
+def get_word(conn, word_id):
+    cur = conn.execute("select lemma, pos from word where lemma='%s'" % word_id)
+    word_result = cur.fetchall()
+    return word_id
 
 def main():
     # ファイルパス
