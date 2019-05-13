@@ -1,6 +1,7 @@
 from pyknp import KNP
 import sys
 import pprint
+import sqlite3
 
 # creat compound noun(letter)
 def compound_noun(word, _knp):
@@ -41,12 +42,27 @@ def is_human_category(_list):
                 flag = True
     return flag
 
+# 品詞が名詞か判定
+def is_noun(str):
+    if str == '名詞':
+        return True
+    else:
+        return False
+
+# データベースに登録する関数
+
 # main method
 def main():
+    # データベース定義
+    db_filename = 'data/noun.db'
+    # データベースに接続
+    conn = sqlite3.connect(db_filename)
     # knp
     knp = KNP()
+    # 入力文字列
+    input_sentence = '野球少年かよ'
     # 解析
-    result = knp.parse("このバカ野郎が！")
+    result = knp.parse(input_sentence)
 
     print("文節")
     for bnst in result.bnst_list():
@@ -64,11 +80,56 @@ def main():
         % (mrph.midasi, mrph.yomi, mrph.genkei, mrph.hinsi, mrph.bunrui, mrph.katuyou1, mrph.katuyou2, mrph.imis, mrph.repname))
 
     for mrph in result.mrph_list():
+        # mrph.imisを変換(str -> dic)
         imis = convert_imis2dic(mrph.imis)
-        print(is_human_category(imis))
+        # 品詞チェック (人、動物)
+        if is_noun(mrph.hinsi) is True:
+            # カテゴリチェック
+            if is_human_category(imis) is True:
+                # 対象単語
+                word = mrph.genkei
+                # 単語が登録されているか検索(IDを取得)
+                search_command = conn.execute("select wordid from word where word='%s'" % word)
+                result = search_command.fetchall()
+                # 登録されていない場合の処理
+                if len(result) == 0:
+                    # レコード数を取得
+                    count_command = conn.execute('select count (wordid) from word')
+                    count_result = count_command.fetchall()
+                    # wordid = レコード数 + 1
+                    wordid = (int(count_result[0][0]) + 1)
+                    # wordテーブルにデータ登録
+                    innsert_command_word = 'insert into word (wordid, word, category) values (?, ?, ?)'
+                    # カテゴリを取得
+                    category = ''
+                    for d in imis:
+                        if 'カテゴリ' in d:
+                            category = d['カテゴリ']
+                    # 挿入データ
+                    tuple_word = (wordid, word, category)
+                    # SQL文の実行
+                    conn.execute(innsert_command_word, tuple_word)
+                    
+                    # linkテーブルにデータ登録
+                    insert_command_link = 'insert into link (wordid, sentence) values (?, ?)'
+                    # 挿入データ
+                    tuple_link = (wordid, input_sentence)
+                    # SQL文の実行
+                    conn.execute(insert_command_link, tuple_link)
+                else:
+                    # 単語ID
+                    wordid = result[0][0]
+                    # linkテーブルにデータ登録
+                    insert_command_link = 'insert into link (wordid, sentence) values (?, ?)'
+                    # 挿入データ
+                    tuple_link = (wordid, input_sentence)
+                    # SQL文の実行
+                    conn.execute(insert_command_link, tuple_link)
+
+                # 挿入データを保存
+                conn.commit()
         pprint.pprint(imis)
         print("\n")
-
 
 if __name__ == '__main__':
     main()
