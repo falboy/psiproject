@@ -105,27 +105,46 @@ def get_hyponym_list(conn, synset_id):
     else:
         return result   
 
-# 概念IDから概念情報[(pos, name)]を返す関数
-def get_synset(conn, synset_id):
+# 概念IDから概念情報{'pos'=xxx, 'name'=yyy}を返す関数
+def get_synset(conn, synsetid):
     # 概念情報を取得
-    cur = conn.execute("select pos, name from synset where synset='%s'" % synset_id)
+    cur = conn.execute("select pos, name from synset where synset='%s'" % synsetid)
     synset_result = cur.fetchall()
-    return synset_result
+    # 返却用の空リストを作成
+    result = []
+    for synset in synset_result:
+        dic = dict(pos=synset[0], name=synset[1])
+        result.append(dic)
+    # 値を返却
+    return result
 
-# queryから単語情報[(word_id,pos)]を取得する関数
-def get_word_id(conn, query):
+# queryから単語情報[(wordid,pos)]を返す関数
+def get_wordid(conn, query):
     cur = conn.execute("select wordid, pos from word where lemma='%s'" % query)
     word_result = cur.fetchall()
-    if len(word_result) == 0:
+    # 返却用の空リストを作成
+    result = []
+    for word in word_result:
+        dic = dict(wordid=word[0], pos=word[1])
+        result.append(dic)
+    
+    if len(result) == 0:
         return False
     else:
         return word_result
 
-# word_idから単語を取得する関数
-def get_word(conn, word_id):
-    cur = conn.execute("select lemma, pos from word where lemma='%s'" % word_id)
+# word_idから単語[(lemma, pos)]を返す関数
+def get_word(conn, wordid):
+    cur = conn.execute("select lemma, pos from word where lemma='%s'" % wordid)
     word_result = cur.fetchall()
     return word_result
+
+# 単語の属する概念IDリストを返す関数　(単語IDを使用)
+def get_synsetid_list(conn, wordid):
+    cur = conn.execute("select synset from sense where wordid='%s'" % wordid)
+    sense_result = cur.fetchall()
+    return sense_result
+
 
 def main():
     # ファイルパス
