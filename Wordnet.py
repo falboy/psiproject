@@ -199,20 +199,21 @@ def main():
 
     # パラメータを追加
     parser.add_argument("query", help="検索クエリー")
-    parser.add_argument("-w", "--word_info", help="単語情報の検索")
-    parser.add_argument("-s", "--synset_def", help="概念説明の検索")
+    parser.add_argument("-w", "--word_info", help="単語情報の検索", action='store_true')
+    parser.add_argument("-s", "--synset_def", help="概念説明の検索", action='store_true')
 
     # 引数を取得
     args = parser.parse_args()
 
     # 単語情報の簡易検索
-    if (args.word_info is not None):
+    if (args.word_info is True):
         search_word_info(conn, args.query)
 
     # 概念定義を検索
-    if (args.synset_def is not None):
+    if (args.synset_def is True):
         search_synset_def(conn, args.query)
 
+    
 
 if __name__ == '__main__':
     main()
