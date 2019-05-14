@@ -86,8 +86,8 @@ def verb_function(dic):
 
 # 名詞の語尾変形処理関数
 def noun_function(dic):
-    X = None
-    return X
+    genkei = dic['原形']
+    return genkei
 
 # 様々な解析結果(文字列)を辞書形式に変換する関数
 def get_dic(str):
