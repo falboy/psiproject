@@ -1,2 +1,3 @@
 *.db
 data/noun.db-journal
+__pycache__/category_settings.cpython-36.pyc
