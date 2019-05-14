@@ -4,19 +4,90 @@ import pprint
 import sqlite3
 import category_settings
 
-# creat compound noun(letter)
-def compound_noun(word, _knp):
+# 連体形にする必要のある単語を特定
+def get_attribute_mrph(mrph_list):
+    # 複合名詞作成に利用する単語用の変数を用意
+    attribute = {'原形': None, '品詞':None, '活用1':None, '活用2':None}
+    # 形態素の構成数別で処理をする
+    mrph_count = len(mrph_list)
+    if 2 < mrph_count:
+        print("mrph_count:%i" % mrph_count)
+        for mrph in mrph_list:
+            print("原形:%s 品詞:%s" % (mrph.genkei, mrph.hinsi))
+            # 名詞、動詞、形容詞以外のカウント変数を用意
+            josi_count = 0
+
+            # attributeの値を埋める
+    elif mrph_count == 1:
+        mrph = mrph_list[0]
+        attribute['原形'] = mrph.genkei
+        attribute['品詞'] = mrph.hinsi
+        attribute['活用1'] = mrph.katuyou1
+        attribute['活用2'] = mrph.katuyou2
+    else:
+        print("error 属性単語の長さ部分")
+
+    return attribute
+
+# 複合名詞を作成する関数(letter)
+def get_compound_noun(word):
     # 形態素解析
-    result = _knp.parse(word)
-    # 品詞判定
+    knp = KNP()
+    result = knp.parse(word)
+    # 解析結果の形態素部分を取得 (len > 2 の可能性あり)
+    mrph_list = result.mrph_list()
 
-    # 原型取得
+    # 変形対象の単語(形態素)を取得
+    attribute = get_attribute_mrph(mrph_list)
 
-    # 名詞に接続可能な形にする
+    # 品詞判定をして連体名詞に変形
+    X = None
+    if attribute['品詞'] == '形容詞':
+        X = adjective_function(attribute)
+    elif attribute['品詞'] == '動詞':
+        X = verb_function(attribute)
+    elif attribute['品詞'] == '名詞':
+        X = noun_function(attribute)
+    else:
+        print("error 品詞判定部分")
 
-    # 複合名詞作成
-
+    # 人や物を表す要素部分の名詞を取得
+    Y = None
     # 複合名詞を出力
+    compound_noun = X + Y
+    # 値を返却
+    return compound_noun
+
+# 形容詞の語尾変形処理関数
+def adjective_function(dic):
+    # 引数から原形を取得
+    genkei = dic['原形']
+    # 返却変数を用意
+    X = None
+    # イ活用、ナ活用か判定
+    if dic['活用1'] == 'イ形容詞':
+        if genkei[-1:] == 'い':
+            X = genkei
+        else:
+            X = genkei + 'い'
+    
+    if dic['活用1'] == 'ナ形容詞':
+        if genkei[-1:] == 'な':
+            X = genkei
+        else:
+            X = genkei + 'な'
+    # 変換結果を返す
+    return X
+
+# 動詞の語尾変形処理関数
+def verb_function(dic):
+    X = None
+    return X
+
+# 名詞の語尾変形処理関数
+def noun_function(dic):
+    X = None
+    return X
 
 # 様々な解析結果(文字列)を辞書形式に変換する関数
 def get_dic(str):
@@ -61,7 +132,7 @@ def main():
     # knp
     knp = KNP()
     # 入力文字列
-    input_sentence = '野球少年かよ'
+    input_sentence = 'ヤクザ乙'
     # 解析
     result = knp.parse(input_sentence)
 
