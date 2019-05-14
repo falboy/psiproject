@@ -2,6 +2,7 @@ from pyknp import KNP
 import sys
 import pprint
 import sqlite3
+import category_settings
 
 # creat compound noun(letter)
 def compound_noun(word, _knp):
@@ -38,7 +39,7 @@ def is_human_category(_list):
     flag = False
     for d in _list:
         if 'カテゴリ' in d:
-            if d['カテゴリ'] == '人' or d['カテゴリ'] == '動物':
+            if d['カテゴリ'] in category_settings.CATEGORY:
                 flag = True
     return flag
 
