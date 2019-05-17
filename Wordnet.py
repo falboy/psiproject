@@ -17,14 +17,15 @@ def get_hypernym(conn, query):
         # 検索結果（品詞と検索ワード）を表示
         print('%s:%s of "%s"' % (t[0], t[1], query))
         # 概念IDを取得 (複数ヒットする可能性がある)
-        cur = conn.execute("select synset from sense where wordid='%s'" % word_id)
+        wordid = t[0]
+        cur = conn.execute("select synset from sense where wordid='%s'" % wordid)
         sense_result = cur.fetchall()
         # ヒット件数を表示
         print("%s hit" % len(sense_result))
         for synset in sense_result:
             print("synset:%s" % synset)
             # 単語IDを取得
-            word_id = t[0]
+            wordid = t[0]
             # 概念IDを取得
             cur = conn.execute("select pos, name from synset where synset='%s'" % synset)
             synset_result = cur.fetchall()
